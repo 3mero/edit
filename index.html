@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #editor {
+            width: 100%;
+            max-width: 800px;
+            background-color: #f0f0f0;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        #editor textarea {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+            font-size: 16px;
+            border: none;
+            resize: none;
+            margin-bottom: 10px;
+        }
+
+        #editor .buttons {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        #editor button {
+            width: 100px;
+            height: 40px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #editor button:hover {
+            transform: scale(1.1);
+        }
+
+        #editor button:active {
+            transform: scale(0.9);
+        }
+
+        #output {
+            width: 100%;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+        }
+
+        #output iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+        }
+
+        #url {
+            width: 100%;
+            max-width: 600px;
+            height: 40px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            padding: 5px;
+            box-shadow: none;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #load_from_page {
+            width: 200px;
+            height: 40px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #9C27B0;
+            color: white;
+            cursor: pointer;
+        }
+
+        #load_from_page:hover {
+            background-color: #7b1fa2;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="editor">
+            <textarea id="code" spellcheck="false"></textarea>
+            <div class="buttons">
+                <button id="load" onclick="loadFile()">Load</button>
+                <button id="save" onclick="saveFile()">Save</button>
+                <button id="clear" onclick="clearFile()">Clear</button>
+                <button id="add" onclick="addFile()">Add</button>
+            </div>
+            <input id="url" type="text" placeholder="Enter a web page URL">
+            <button id="load_from_page" onclick="loadFromPage()">Load from page</button>
+        </div>
+        <div id="output">
+            <iframe id="result"></iframe>
+        </div>
+    </div>
+    <script>
+        // Get the elements
+        var code = document.getElementById("code");
+        var result = document.getElementById("result");
+        var url = document.getElementById("url");
+
+        // Update the output when the code changes
+        code.addEventListener("input", function() {
+            // Get the code
+            var html = code.value;
+
+            // Write the code to the iframe
+            result.contentWindow.document.open();
+            result.contentWindow.document.write(html);
+            result.contentWindow.document.close();
+        });
+
+        // Load the file from the server
+        function loadFile() {
+            // Create an AJAX request
+            var xhr = new XMLHttpRequest();
+
+            // Specify the method and the URL
+            xhr.open("GET", "load.php");
+
+            // Handle the response
+            xhr.onload = function() {
+                // Check the status
+                if (xhr.status == 200) {
+                    // Get the response
+                    var response = xhr.responseText;
+
+                    // Set the code
+                    code.value = response;
+
+                    // Trigger the input event
+                    code.dispatchEvent(new Event("input"));
+                }
+                else {
+                    // Show an error message
+                    alert("Error: " + xhr.statusText);
+                }
+            };
+
+            // Send the request
+            xhr.send();
+        }
+
+        // Save the file to the server
+        function saveFile() {
+            // Get the code
+            var html = code.value;
+
+            // Create an AJAX request
+            var xhr = new XMLHttpRequest();
+
+            // Specify the method and the URL
+            xhr.open("POST", "save.php");
+
+            // Set the request header
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+            // Handle the response
+            xhr.onload = function() {
+                // Check the status
+                if (xhr.status == 200) {
+                    // Get the response
+                    var response = xhr.responseText;
+
+                    // Show a success message
+                    alert(response);
+                }
+                else {
+                    // Show an error message
+                    alert("Error: " + xhr.statusText);
+                }
+            };
+
+            // Send the request with the data
+            xhr.send("html=" + encodeURIComponent(html));
+        }
+
+        // Clear the file on the server
+        function clearFile() {
+            // Create an AJAX request
+            var xhr = new XMLHttpRequest();
+
+            // Specify the method and the URL
+            xhr.open("GET", "clear.php");
+
+            // Handle the response
+            xhr.onload = function() {
+                // Check the status
+                if (xhr.status == 200) {
+                    // Get the response
+                    var response = xhr.responseText;
+
+                    // Show a success message
+                    alert(response);
+
+                    // Clear the code
+                    code.value = "";
+
+                    // Trigger the input event
+                    code.dispatchEvent(new Event("input"));
+                }
+                else {
+                    // Show an error message
+                    alert("Error: " + xhr.statusText);
+                }
+            };
+
+            // Send the request
+            xhr.send();
+        }
+
+        // Add some content to the file on the server
+        function addFile() {
+            // Get the code
+            var html = code.value;
+
+            // Create an AJAX request
+            var xhr = new XMLHttpRequest();
+
+            // Specify the method and the URL
+            xhr.open("POST", "add.php");
+
+            // Set the request header
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+            // Handle the response
+            xhr.onload = function() {
+                // Check the status
+                if (xhr.status == 200) {
+                    // Get the response
+                    var response = xhr.responseText;
+
+                    // Show a success message
+                    alert(response);
+
+                    // Load the updated file
+                    loadFile();
+                }
+                else {
+                    // Show an error message
+                    alert("Error: " + xhr.statusText);
+                }
+            };
+
+            // Send the request with the data
+            xhr.send("html=" + encodeURIComponent(html));
+        }
+
+        // Load the text content from a web page
+        function loadFromPage() {
+            // Get the URL
+            var page = url.value;
+
+            // Check if the URL is not empty
+            if (page != "") {
+                // Create an AJAX request
+                var xhr = new XMLHttpRequest();
+
+                // Specify the method and the URL
+                xhr.open("POST", "load_from_page.php");
+
+                // Set the request header
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+                // Handle the response
+                xhr.onload = function() {
+                    // Check the status
+                    if (xhr.status == 200) {
+                        // Get the response
+                        var response = xhr.responseText;
+
+                        // Set the code
+                        code.value = response;
+
+                        // Trigger the input event
+                        code.dispatchEvent(new Event("input"));
+                    }
+                    else {
+                        // Show an error message
+                        alert("Error: " + xhr.statusText);
+                    }
+                };
+
+                // Send the request with the data
+                xhr.send("page=" + encodeURIComponent(page));
+            }
+            else {
+                // Show an error message
+                alert("Please enter a web page URL");
+            }
+        }
+    </script>
+</body>
+</html>
